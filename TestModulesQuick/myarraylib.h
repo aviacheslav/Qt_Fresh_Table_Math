@@ -1239,6 +1239,10 @@ public:
     int GetQElements();
 };
 
+Array2DSize Array2DSize_ConcatAdding(const Array2DSize& size1, const Array2DSize& size2, int&ERN1, int&EIN1, int&ERN2, int&EIN2, int shift=0, int Q=0, int FromN=1, int QDfltValsBefore=0, bool SetRect=true);
+
+Array2DSize Array2DSize_ConcatStretching(const Array2DSize& size1, const Array2DSize& size2, int&ERN1, int&EIN1, int&ERN2, int&EIN2, int shift=0, int Q=0, int FromN=1, int QDfltValsBefore=0, bool Stretch1ToMax_Not_AddToLast=true, bool AppendToRect=true);
+
 
 /*
 
@@ -10240,11 +10244,13 @@ template <class T>class Array2D_Prototype{
     //
     virtual void SetNull()=0;
     virtual void construct()=0;
-    virtual Array2D_Prototype* CreateArray()=0;
-    virtual Array2D_Prototype* clone()=0;
+    virtual Array2D_Prototype* CreateArray() const=0;
+    virtual Array2D_Prototype* clone()const=0;
     virtual int GetTypeN() const=0 ;
     //
-    void SetOne(double val=0);
+    void SetOne(T*DfltVal=NULL);
+    void SetOne(const T&DfltVal);
+    void SetOne(T*DfltVal=NULL);
     //
     virtual void SetSize(const Array2DSize&size)=0;
     virtual void SetSize(int QExtRows=1, int ExtRowsLength=1)=0;
@@ -10256,18 +10262,25 @@ template <class T>class Array2D_Prototype{
     virtual int GetMinLength() const=0;
     virtual int GetMaxLength() const=0;
     //
-    bool LineNBelongsHere(int LineN);
-    bool ColNBelongsHere(int ColN);
-    bool NsBelongHere(int LineN, int ColN);
+    //bool LineNBelongsHere(int LineN) const;
+    //bool ColNBelongsHere(int ColN) const;
+    bool NsBelongHere(int ExtRowN, int IneRowN) const;
     //
-    std::vector<T> GetArrayOfExtRowN(int LineN);
-    std::vector<T> GetArrayOfIneRowN(int ColN);
-    std::vector<T> GetContentAsArray1D();
-    std::vector<std::vector<T>> GetContentAsArray2D();
+    //std::vector<T> GetArrayOfExtRowN(int LineN);
+    //std::vector<T> GetArrayOfIneRowN(int ColN);
+    //std::vector<T> GetContentAsArray1D();
+    //std::vector<std::vector<T>> GetContentAsArray2D();
+    //
+    std::vector<T> GetExtRowN_AsArray(int rowN) const;
+    // T*GetExtRowN_AsPtr(int ExtRowN) const;
+    std::vector<T> GetIneRowN_AsArray(int rowN) const;
+    std::vector<T> GetContent_AsArray1D() const;
+    std::vector<std::vector<T>> GetContent_AsArray2D() const;
     //
     //
     virtual T GetComponent_AsVal(int LineN, int ColN) const=0;
     virtual T* GetComponent_AsPtr(int LineN, int ColN) const=0;
+    //
     virtual void SetComponent(const T& val, int LineN, int ColN)=0;
     //
     virtual void AddToExtRowN(int RowN, const T&val)=0;
@@ -10296,29 +10309,618 @@ template <class T>class Array2D_Prototype{
     virtual void DelExtRowN(int N=-1)=0;
     virtual void DelIneRowN(int N=-1)=0;
     //
-    virtual void Set(T**y, const Array2DSize& size, bool WriteSize=true)=0;
-    virtual void Set(T**y, std::vector<int>ExtRowsLengthes, bool RectIfPossible=true, bool WriteSize=true)=0;
-    virtual void Set(T**y, int QExtRows, int*ExtRowsLengthes, bool RectIfPossible=true, bool WriteSize=true)=0;
-    virtual void Set(T**y, int QExtRows, int ExtRowsLength=1, bool WriteSize=true)=0;
-    virtual void Set(T*y, const Array2DSize& size, bool WriteSize=true)=0;
-    virtual void Set(T*y, std::vector<int>ExtRowsLengthes, bool WriteSize=true)=0;
-    virtual void Set(T*y, int QExtRows, int*ExtRowsLengthe, bool WriteSize=true)=0;
-    virtual void Set(T*y, int QExtRows, int ExtRowsLength=1, bool sizeVaria=false, bool WriteSize=true)=0;
-    virtual void Set(std::vector<std::vector<T>>y, bool RectIfPossible=true, bool WriteSize=true)=0;
-    virtual void Set(std::vector<T>y, const Array2DSize& size, bool WriteSize=true)=0;
-    virtual void Set(std::vector<T>y, std::vector<int>ExtRowsLengthes, bool RectIfPossible=true, bool WriteSize=true)=0;
-    virtual void Set(std::vector<T>y, int QExtRows, int*ExtRowsLengthes, bool RectIfPossible=true, bool WriteSize=true)=0;
-    virtual void Set(std::vector<T>y, int QExtRows, int ExtRowsLength=1, bool sizeVaria=false, bool WriteSize=true)=0;
-    virtual void Set(const T&val, const Array2DSize& size, bool WriteSize=true)=0;
-    virtual void Set(const T&val, std::vector<int>ExtRowsLengthes, bool RectIfPossible=true, bool WriteSize=true)=0;
-    virtual void Set(const T&val, int QExtRows, int*ExtRowsLengthes, bool RectIfPossible=true, bool WriteSize=true)=0;
-    virtual void Set(const T&val, int QExtRows, int ExtRowsLength=1, bool WriteSize=true)=0;
+    virtual void Set(T**y, const Array2DSize& size, bool WriteSize=true);
+    virtual void Set(T**y, std::vector<int>ExtRowsLengthes, bool RectIfPossible=true, bool WriteSize=true);
+    virtual void Set(T**y, int QExtRows, int*ExtRowsLengthes, bool RectIfPossible=true, bool WriteSize=true);
+    virtual void Set(T**y, int QExtRows, int ExtRowsLength=1, bool RectIfPossible=true, bool WriteSize=true);
+    virtual void Set(T*y, const Array2DSize& size, bool WriteSize=true);
+    virtual void Set(T*y, std::vector<int>ExtRowsLengthes, bool WriteSize=true);
+    virtual void Set(T*y, int QExtRows, int*ExtRowsLengthe, bool WriteSize=true);
+    virtual void Set(T*y, int QExtRows, int ExtRowsLength=1, bool RectIfPossible=true, bool sizeVaria=false, bool WriteSize=true);
+    virtual void Set(std::vector<std::vector<T>>y, bool RectIfPossible=true, bool WriteSize=true);
+    virtual void Set(std::vector<T>y, const Array2DSize& size, bool WriteSize=true);
+    virtual void Set(std::vector<T>y, std::vector<int>ExtRowsLengthes, bool RectIfPossible=true, bool WriteSize=true);
+    virtual void Set(std::vector<T>y, int QExtRows, int*ExtRowsLengthes, bool RectIfPossible=true, bool WriteSize=true);
+    virtual void Set(std::vector<T>y, int QExtRows, int ExtRowsLength=1, bool RectIfPossible=true, bool WriteSize=true);
+    virtual void Set(const T&val, const Array2DSize& size, bool WriteSize=true);
+    virtual void Set(const T&val, std::vector<int>ExtRowsLengthes, bool RectIfPossible=true, bool WriteSize=true);
+    virtual void Set(const T&val, int QExtRows, int*ExtRowsLengthes, bool RectIfPossible=true, bool WriteSize=true);
+    virtual void Set(const T&val, int QExtRows, int ExtRowsLength=1, bool RectIfPossible=true, bool WriteSize=true);
+    //
+    void SwapVals(int ExtRowN1, int IneRowN1, int ExtRowN2, int IneRowN2);
+    //
+    virtual void SwapExtRows(int N1, int N2)=0;
+    virtual void SwapIneRows(int N1, int N2)=0;
+    //
+    virtual void ReverseExtRowN(int rowN)=0;
+    virtual void ReverseIneRowN(int rowN)=0;
+    virtual void ReverseExtRowsSuccession()=0;
+    virtual void ReverseIneRowsSuccession()=0;
+    //
+    bool ValIsAtPos(const T&val, int ExtRowN, int IneRowN) const;
+    std::vector<std::vector<int>> SeekVal(const T&val) const;
+    bool ExtRowIsAtPos(T*row, int Q, int ExtRowN, int IneRowN) const;
+    std::vector<std::vector<int>> SeekExtRow(T*row, int L) const;
+    bool IneRowIsAtPos(T*row, int Q, int ExtRowN, int IneRowN) const;
+    std::vector<std::vnoEot(ector<int>> SeekIneRow(T*row, int Q) const;
+    bool Arr2DIsAtPos(std::vector<std::vector<T>>arr, int ExtRowN, int IneRowN, bool transposed=false, bool ExtRowsReversed=false, bool IneRowsReversed=false) const;
+    bool Arr2DIsAtPos_simple(std::vector<std::vector<T>>arr, int ExtRowN, int IneRowN, bool ExtRowsReversed=false);
+    std::vector<std::vector<int>> SeekArr2D(std::vector<std::vector<T>>arr, bool transposed=false, bool ExtRowsReversed=false, bool IneRowsReversed=false) const;
+    //
+    void ConcatAdding(Array2D_Prototype*obj, int QShiftedCols=0, int FromN=1, int QAdded=0);
+    void ConcatStretching(Array2D_Prototype*obj, int QShiftedExtRowNs=0, int FromN=1, int QAdded=0);
+};
+
+template<typename T> void Array2D_Prototype<T>::SetOne(T*DfltValParam=NULL){
+    this->SetSize(1, 1);
+    T DfltVal;
+    if(DfltValParam!=NULL){
+        DfltVal=(*(DfltValParam));
+    }
+    this->SetComponent(DfltVal, 1, 1);
+}
+template<typename T> void Array2D_Prototype<T>::SetOne(const T& DfltVal){
+    this->SetSize(1, 1);
+    this->SetComponent(DfltVal, 1, 1);
+}
+template<typename T> bool Array2D_Prototype<T>::NsBelongHere(int ExtRowN, int ExtRowN) const{
+    bool verdict=true;
+    int QExtRows=this->GetQExtRows(), CurLineLength;
+    if(ExtRowN<0){
+        ExtRowN+=(QExtRows+1);
+    }
+    if(ExtRowN<1 || ExtRowN>QExtRows){
+        verdict=false;
+    }else{
+        CurLineLength=this->GetLength(ExtRowN);
+        if(ExtRowN<0){
+            ExtRowN+=(CurLineLength+1);
+        }
+        if(ExtRowN<1 && ExtRowN>CurLineLength){
+            verdict=false;
+        }
+    }
+    return verdict;
+}
+//
+//
+template<typename T> std::vector<T> Array2D_Prototype<T>::GetExtRowN_AsArray(int ExtRowN) const{
+    std::vector<T>R;
+    T val;
+    int QExtRows=this->GetQExtRows(), CurRowLength=0;
+    if(ExtRowN<0){
+        ExtRowN+=(QExtRows+1);
+    }
+    if(ExtRowN>=1 && ExtRowN<=QExtRows){
+        CurRowLength=this->GetLength(ExtRowN);
+        for(int i=1; i<=CurRowLength; i++){
+            val=this->GetComponent_AsVal(ExtRowN, i);
+            R.push_back(val);
+        }
+    }
+    return R;
+}
+// T*GetExtRowN_AsPtr(int ExtRowN) const;
+template<typename T> std::vector<T> Array2D_Prototype<T>::GetIneRowN_AsArray(int IneRowN) const{
+    std::vector<T>R;
+    T val;
+    int N=-1;
+    bool contin;
+    int QExtRows=this->GetQExtRows(), CurRowLength=0;
+    if(ExtRowN<0){
+        ExtRowN+=(QExtRows+1);
+    }
+    if(ExtRowN>=1 && ExtRowN<=QExtRows){
+        N++;
+        contin=(this->GetLength(N+1)>=IneRowN);
+        while(contin){
+            N++;
+            val=this->GetComponent_AsVal(i, IneRowN);
+            R.push_back(val);
+            contin=(N<QExtRows && this->GetLength(N+1)>=IneRowN);
+        }
+    }
+    return R;
+}
+template<typename T> std::vector<T> Array2D_Prototype<T>::GetContent_AsArray1D() const{
+    std::vector<T>R;
+    T val;
+    int N=-1;
+    bool contin;
+    int QExtRows=this->GetQExtRows(), CurRowLength=0;
+    for(int i=1; i<=CurRowLength; i++){
+        CurRowLength=this->GetLength(i);
+        for(int j=1; j<=CurRowLength; j++){
+            val=this->GetComponent_AsVal(i, j);
+            R.push_back(val);
+        }
+    }
+    return R;
+}
+template<typename T> std::vector<std::vector<T>> Array2D_Prototype<T>::GetContent_AsArray2D() const{
+    std::vector<T>row;
+    std::vector<std::vector<T>>data;
+    T val;
+    int N=-1;
+    bool contin;
+    int QExtRows=this->GetQExtRows(), CurRowLength=0;
+    for(int i=1; i<=CurRowLength; i++){
+        CurRowLength=this->GetLength(i);
+        row.clear;
+        for(int j=1; j<=CurRowLength; j++){
+            val=this->GetComponent_AsVal(i, j);
+            row.push_back(val);
+        }
+        data.push_back(row);
+    }
+    return data;
+}
+
+template<typename T> void Array2D_Prototype<T>::Set(T**y, const Array2DSize& size, bool RectIfPossible, bool WriteSize){
+    int QExtRows=this->GetQExtRows(), CurExtRowLength=0;
+    T val;
+    this->SetSize(size);
+    if(y!=NULL){
+        for(int i=1; i<=QExtRows; i++){
+            CurExtRowLength=this->GetLength(i);
+            for(int j=1; j<=CurExtRowLength; j++){
+                val=y[i-1][j-1];
+                this->SetComponent(val, i, j);
+
+            }
+        }
+    }
+}
+
+template<typename T> void Array2D_Prototype<T>::Set(T**y, std::vector<int>ExtRowsLengthes, bool RectIfPossible, bool WriteSize){
+    Array2DSize size;
+    int minL, maxL;
+    size.Set(ExtRowsLengthes);
+    minL=size.GetMinLength(), maxL=size.GetMaxLength();
+    if(minL==maxL && RectIfPossible==true && size.isVariaLength()==true){
+        size.Set(ExtRowsLengthes.size(), ExtRowsLengthes.at(0));
+    }
+    this->Set(y, size, RectIfPossible, WriteSize);
+}
+
+template<typename T> void Array2D_Prototype<T>::Set(T**y, int QExtRows, int*ExtRowsLengthes, bool RectIfPossible, bool WriteSize){
+    Array2DSize size;
+    int minL, maxL;
+    size.Set(QExtRows, ExtRowsLengthes);
+    minL=size.GetMinLength(), maxL=size.GetMaxLength();
+    if(minL==maxL && RectIfPossible==true && size.isVariaLength()==true){
+        size.Set(QExtRows, ExtRowsLengthes[0]);
+    }
+    this->Set(y, size, RectIfPossible, WriteSize);
+}
+template<typename T> void Array2D_Prototype<T>::Set(T**y, int QExtRows, int ExtRowsLength, bool RectIfPossible, bool WriteSize){
+    Array2DSize size;
+    int minL, maxL;
+    size.Set(QExtRows, ExtRowsLength);
+    minL=size.GetMinLength(), maxL=size.GetMaxLength();
+    if(minL==maxL && RectIfPossible==true && size.isVariaLength()==true){
+        size.Set(QExtRows, ExtRowsLengthes[0]);
+    }
+    this->Set(y, size, RectIfPossible, WriteSize);
+}
+
+template<typename T> void Array2D_Prototype<T>::Set(T*y, const Array2DSize& size, bool WriteSize){
+    int QExtRows=this->GetQExtRows(), CurExtRowLength=0, PosN;
+    T val;
+    this->SetSize(size);
+    if(y!=NULL){
+        for(int i=1; i<=QExtRows; i++){
+            CurExtRowLength=this->GetLength(i);
+            for(int j=1; j<=CurExtRowLength; j++){
+                PosN=size.GetPositionByCoordsIfRealizedAs1D(i, j);
+                val=y[PosN-1];
+                this->SetComponent(val, i, j);
+            }
+        }
+    }
+}
+
+template<typename T> void Array2D_Prototype<T>::Set(T*y, int QExtRows, int*ExtRowsLengthes, bool RectIfPossible, bool WriteSize){
+    Array2DSize size;
+    int minL, maxL;
+    size.Set(QExtRows, ExtRowsLengthes);
+    minL=size.GetMinLength(), maxL=size.GetMaxLength();
+    if(minL==maxL && RectIfPossible==true && size.isVariaLength()==true){
+        size.Set(QExtRows, ExtRowsLengthes[0]);
+    }
+    this->Set(y, size, RectIfPossible, WriteSize);
+}
+template<typename T> void Array2D_Prototype<T>::Set(T*y, int QExtRows, int ExtRowsLength, bool RectIfPossible, bool WriteSize){
+    Array2DSize size;
+    int minL, maxL;
+    size.Set(QExtRows, ExtRowsLength);
+    minL=size.GetMinLength(), maxL=size.GetMaxLength();
+    if(minL==maxL && RectIfPossible==true && size.isVariaLength()==true){
+        size.Set(QExtRows, ExtRowsLengthes[0]);
+    }
+    this->Set(y, size, RectIfPossible, WriteSize);
+}
+template<typename T> void Array2D_Prototype<T>::Set(T*y, std::vector<int>ExtRowsLengthes, bool RectIfPossible, bool WriteSize){
+    Array2DSize size;
+    int minL, maxL;
+    size.Set(ExtRowsLengthes);
+    minL=size.GetMinLength(), maxL=size.GetMaxLength();
+    if(minL==maxL && RectIfPossible==true && size.isVariaLength()==true){
+        size.Set(ExtRowsLengthes.size(), ExtRowsLengthes.at(0));
+    }
+    this->Set(y, size, RectIfPossible, WriteSize);
+}
+
+template<typename T> void Array2D_Prototype<T>::Set(std::vector<std::vector<T>>y, bool RectIfPossible, bool WriteSize){
+    int QExtRows=this->GetQExtRows(), CurExtRowLength=0;
+    T val;
+    this->SetSize(size);
+    if(y!=NULL){
+        for(int i=1; i<=QExtRows; i++){
+            CurExtRowLength=this->GetLength(i);
+            for(int j=1; j<=CurExtRowLength; j++){
+                val=y[i-1][j-1];
+                this->SetComponent(val, i, j);
+
+            }
+        }
+    }
+}
+
+template<typename T> void Array2D_Prototype<T>::Set(std::vector<T>y, const Array2DSize& size, bool WriteSize=true){
+    int QExtRows=this->GetQExtRows(), CurExtRowLength=0, PosN;
+    T val;
+    this->SetSize(size);
+    if(y!=NULL){
+        for(int i=1; i<=QExtRows; i++){
+            CurExtRowLength=this->GetLength(i);
+            for(int j=1; j<=CurExtRowLength; j++){
+                PosN=size.GetPositionByCoordsIfRealizedAs1D(i, j);
+                val=y[PosN-1];
+                this->SetComponent(val, i, j);
+            }
+        }
+    }
+}
+
+template<typename T> void Array2D_Prototype<T>::Set(std::vector<T>y, int QExtRows, int*ExtRowsLengthes, bool RectIfPossible, bool WriteSize){
+    Array2DSize size;
+    int minL, maxL;
+    size.Set(QExtRows, ExtRowsLengthes);
+    minL=size.GetMinLength(), maxL=size.GetMaxLength();
+    if(minL==maxL && RectIfPossible==true && size.isVariaLength()==true){
+        size.Set(QExtRows, ExtRowsLengthes[0]);
+    }
+    this->Set(y, size, RectIfPossible, WriteSize);
+}
+template<typename T> void Array2D_Prototype<T>::Set(std::vector<T>y, int QExtRows, int ExtRowsLength, bool RectIfPossible, bool WriteSize){
+    Array2DSize size;
+    int minL, maxL;
+    size.Set(QExtRows, ExtRowsLength);
+    minL=size.GetMinLength(), maxL=size.GetMaxLength();
+    if(minL==maxL && RectIfPossible==true && size.isVariaLength()==true){
+        size.Set(QExtRows, ExtRowsLengthes[0]);
+    }
+    this->Set(y, size, RectIfPossible, WriteSize);
+}
+template<typename T> void Array2D_Prototype<T>::Set(std::vector<T>y, std::vector<int>ExtRowsLengthes, bool RectIfPossible, bool WriteSize){
+    Array2DSize size;
+    int minL, maxL;
+    size.Set(ExtRowsLengthes);
+    minL=size.GetMinLength(), maxL=size.GetMaxLength();
+    if(minL==maxL && RectIfPossible==true && size.isVariaLength()==true){
+        size.Set(ExtRowsLengthes.size(), ExtRowsLengthes.at(0));
+    }
+    this->Set(y, size, RectIfPossible, WriteSize);
+}
+
+template<typename T> void Array2D_Prototype<T>::Set(const T&val, const Array2DSize& size, bool WriteSize){
+    int QExtRows=this->GetQExtRows(), CurExtRowLength=0;
+    T val;
+    this->SetSize(size);
+    for(int i=1; i<=QExtRows; i++){
+        CurExtRowLength=this->GetLength(i);
+        for(int j=1; j<=CurExtRowLength; j++){
+            this->SetComponent(val, i, j);
+        }
+    }
+}
+
+template<typename T> void Array2D_Prototype<T>::Set(const T&val, std::vector<int>ExtRowsLengthes, bool RectIfPossible, bool WriteSize){
+    Array2DSize size;
+    int minL, maxL;
+    size.Set(ExtRowsLengthes);
+    minL=size.GetMinLength(), maxL=size.GetMaxLength();
+    if(minL==maxL && RectIfPossible==true && size.isVariaLength()==true){
+        size.Set(ExtRowsLengthes.size(), ExtRowsLengthes.at(0));
+    }
+    this->Set(val, size, RectIfPossible, WriteSize);
+}
+
+template<typename T> void Array2D_Prototype<T>::Set(const T&val, int QExtRows, int*ExtRowsLengthes, bool RectIfPossible, bool WriteSize){
+    Array2DSize size;
+    int minL, maxL;
+    size.Set(QExtRows, ExtRowsLengthes);
+    minL=size.GetMinLength(), maxL=size.GetMaxLength();
+    if(minL==maxL && RectIfPossible==true && size.isVariaLength()==true){
+        size.Set(QExtRows, ExtRowsLengthes[0]);
+    }
+    this->Set(val, size, RectIfPossible, WriteSize);
+}
+template<typename T> void Array2D_Prototype<T>::Set(const T&val, int QExtRows, int ExtRowsLength, bool RectIfPossible, bool WriteSize){
+    Array2DSize size;
+    int minL, maxL;
+    size.Set(QExtRows, ExtRowsLength);
+    minL=size.GetMinLength(), maxL=size.GetMaxLength();
+    if(minL==maxL && RectIfPossible==true && size.isVariaLength()==true){
+        size.Set(QExtRows, ExtRowsLengthes[0]);
+    }
+    this->Set(val, size, RectIfPossible, WriteSize);
+}
+
+template<typename T> void Array2D_Prototype<T>::SwapVals(int ExtRowN1, int IneRowN1, int ExtRowN2, int IneRowN2){
+    int QExtRows=this->GetQExtRows(), L1, L2;
+    T val1, val2, buf;
+    if(ExtRowN1<0){
+       ExtRowN1+=(QExtRows+1);
+    }
+    if(ExtRowN2<0){
+       ExtRowN2+=(QExtRows+1);
+    }
+    if(ExtRowN1>=1 && ExtRowN1<=QExtRows && ExtRowN2>=1 && ExtRowN2<=QExtRows){
+        L1=this->GetLength(ExtRowN1);
+        L2=this->GetLength(ExtRowN2);
+        if(IneRowN1>=1 && IneRowN1<=L1 && IneRowN2>=1 && IneRowN2<=L2){
+            val1=this->GetComponent(ExtRowN1, IneRowN1);
+            val2=this->GetComponent(ExtRowN2, IneRowN2);
+            //
+            buf=val1;
+            val1=val2;
+            val2=buf;
+            //
+            this->SetComponent(val1, ExtRowN1, IneRowN1);
+            this->SetComponent(val2, ExtRowN2, IneRowN2);
+        }
+    }
+}
+//
+//
+template<typename T> bool Array2D_Prototype<T>::ValIsAtPos(const T&val, int ExtRowN, int ExtRowN) const{
+    bool b=false;
+    int QExtRows=this->GetQExtRows(), L;
+    T ownVal;
+    if(ExtRowN>=1 && ExtRowN<=QExtRows){
+        L=this->GetLength(ExtRowN);
+        if(IneRowN>=1 && IneRowN<=L){
+            ownVal=this->GetComponent(ExtRowN, ExtRowN);
+            if(val==ownVal){
+                b=true;
+            }
+        }
+    }
+    return b;
+}
+template<typename T> std::vector<std::vector<int>> Array2D_Prototype<T>::SeekVal(const T&val) const{
+    std::vector<std::vector<int>>Ns;
+    std::vector<int> pair;
+    bool b;
+    int QExtRows=this->GetQExtRows(), L;
+    for(int i=1; i<=QExtRows; i++){
+        L=this->GetLength(i);
+        for(int j=1; j<=L; j++){
+            b=this->ValIsAtPos(val, i, j);
+            if(b==true){
+                pair.clear();
+                pair.push_back(i);
+                pair.push_back(j);
+                Ns.push_back(pair);
+            }
+        }
+    }
+    return Ns;
+}
+template<typename T> bool Array2D_Prototype<T>::ExtRowIsAtPos(T*row, int Q, int ExtRowN, int IneRowN) const{
+    bool b=true;
+    int QExtRows=this->GetQExtRows(), L;
+    T ownVal;
+    if(ExtRowN>=1 && ExtRowN<=QExtRows){
+        L=this->GetLength(ExtRowN);
+        if(IneRowN>=1 && IneRowN+Q-1<=L){
+            for(int i=1; i<=Q; i++){
+                ownVal=this->GetComponent(ExtRowN, IneRowN+i-1);
+                if(!(ownVal==row[i-1])){
+                    b=false;
+                }
+            }
+        }
+    }
+    return b;
+}
+template<typename T> std::vector<std::vector<int>> Array2D_Prototype<T>::SeekExtRow(T*row, int Q) const{
+    std::vector<std::vector<int>>Ns;
+    std::vector<int> pair;
+    bool b;
+    int QExtRows=this->GetQExtRows(), L;
+    for(int i=1; i<=QExtRows; i++){
+        L=this->GetLength(i);
+        for(int j=1; j<=L-Q+1; j++){
+            b=this->ExtRowIsAtPos(row, Q, i, j);
+            if(b==true){
+                pair.clear();
+                pair.push_back(i);
+                pair.push_back(j);
+                Ns.push_back(pair);
+            }
+        }
+    }
+    return Ns;
+}
+template<typename T> bool Array2D_Prototype<T>::IneRowIsAtPos(T*row, int Q, int ExtRowN, int IneRowN) const{
+    bool b=true;
+    int QExtRows=this->GetQExtRows(), L;
+    T ownVal;
+    if(ExtRowN>=1 && ExtRowN+Q-1<=QExtRows){
+        L=this->GetLength(ExtRowN);
+        if(IneRowN>=1 && IneRowN<=L){
+            for(int i=1; i<=Q; i++){
+                L=this->GetLength(i);
+                if(IneRowN>L){
+                    b=false;
+                }
+            }
+            if(b==true){
+                for(int i=1; i<=Q; i++){
+                    ownVal=this->GetComponent(ExtRowN+i-1, IneRowN);
+                    if(!(ownVal==row[i-1])){
+                        b=false;
+                    }
+                }
+            }
+        }
+    }
+    return b;
+}
+template<typename T> std::vector<std::vector<int>> Array2D_Prototype<T>::SeekIneRow(T*row, int Q) const{
+    std::vector<std::vector<int>>Ns;
+    std::vector<int> pair;
+    bool b;
+    int QExtRows=this->GetQExtRows(), L;
+    for(int i=1; i<=QExtRows-Q+1; i++){
+        L=this->GetLength(i);
+        for(int j=1; j<=L; j++){
+            b=this->ExtRowIsAtPos(row, Q, i, j);
+            if(b==true){
+                pair.clear();
+                pair.push_back(i);
+                pair.push_back(j);
+                Ns.push_back(pair);
+            }
+        }
+    }
+    return Ns;
+}
+template<typename T> bool Array2D_Prototype<T>::Arr2DIsAtPos(std::vector<std::vector<T>>arr, int ExtRowN, int IneRowN, bool transposed=false, bool ExtRowsReversed=false, bool IneRowsReversed=false) const{
+    bool b;
+    int QExtRows=this->GetQExtRows(), L;
+    T ownVal;
+    if(transposed==false){
+
+    }else{
+
+    }
+    return b;
+}
+std::vector<std::vector<int>> SeekArr2D(std::vector<std::vector<T>>arr, bool transposed=false, bool ExtRowsReversed=false, bool IneRowsReversed=false) const;
+
+template <class T>class Array2D_P2L : public Array2D_Prototype{
+    Array2D_P2L(bool WriteSize=true);
+    Array2D_P2L(const Array2DSize&size, bool WriteSize=true);
+    Array2D_P2L(int QExtRows, int QIneRows, bool rectIfPossible=true, bool WriteSize=true);
+    Array2D_P2L(int QExtRows, int*ExtRowsLengthes, bool rectIfPossible=true, bool WriteSize=true);
+    Array2D_P2L(std::vector<int>Lengthes, bool rectIfPossible=true, bool WriteSize=true);
+    //
+    Array2D_P2L(const T&val, bool WriteSize=true);
+    Array2D_P2L(const Array2DSize&size, const T&val, bool WriteSize=true);
+    Array2D_P2L(int QExtRows, int QIneRows, const T&val, bool rectIfPossible=true, bool WriteSize=true);
+    Array2D_P2L(int QExtRows, int*ExtRowsLengthes, const T&val, bool WriteSize=true);
+    Array2D_P2L(std::vector<int>Lengthes, const T&val, bool WriteSize=true);
+    //
+    Array2D_P2L(const Array2DSize&size, T*data, bool WriteSize=true);
+    Array2D_P2L(int QExtRows, int QIneRows, T*data, bool rectIfPossible=true, bool WriteSize=true);
+    Array2D_P2L(int QExtRows, int*ExtRowsLengthes, T*data, bool rectIfPossible=true, bool WriteSize=true);
+    Array2D_P2L(std::vector<int>Lengthes, T*data, bool rectIfPossible=true, bool WriteSize=true);
+    //
+    Array2D_P2L(const Array2DSize&size, T**data, bool WriteSize=true);
+    Array2D_P2L(int QExtRows, int QIneRows, T**data, bool rectIfPossible=true, bool WriteSize=true);
+    Array2D_P2L(int QExtRows, int*ExtRowsLengthes, T**data, bool rectIfPossible=true, bool WriteSize=true);
+    Array2D_P2L(std::vector<int>Lengthes, T**data, bool rectIfPossible=true, bool WriteSize=true);
+    //
+    Array2D_P2L(const Array2DSize&size, std::vector<T>data, bool WriteSize=true);
+    Array2D_P2L(int QExtRows, int QIneRows, std::vector<T>data, bool rectIfPossible=true, bool WriteSize=true);
+    Array2D_P2L(int QExtRows, int*ExtRowsLengthes, std::vector<T>data, bool rectIfPossible=true, bool WriteSize=true);
+    Array2D_P2L(std::vector<int>Lengthes, std::vector<T>data, bool rectIfPossible=true, bool WriteSize=true);
+    //
+    Array2D_P2L(std::vector<std::vector<T>>data, bool rectIfPossible=true, bool WriteSize=true);
+    //
+    virtual ~Array2D_Prototype()=default;
+    //
+    virtual void SetNull();
+    virtual void construct();
+    virtual Array2D_Prototype* CreateArray() const;
+    virtual Array2D_Prototype* clone()const;
+    virtual int GetTypeN() const ;
+    //
+    void SetOne(double val=0);
+    //
+    virtual void SetSize(const Array2DSize&size);
+    virtual void SetSize(int QExtRows=1, int ExtRowsLength=1)=0;
+    virtual void SetSize(int QExtRows=1, int*ExtRowsLengthes=NULL)=0;//if Null => L=0
+    virtual void SetSize(std::vector<int>Lengthes)=0;
+    //
+    virtual int GetQExtRows() const=0;
+    virtual int GetLength(int ExtRowN=1) const=0;
+    virtual int GetMinLength() const=0;
+    virtual int GetMaxLength() const=0;
+    //
+    bool LineNBelongsHere(int LineN) const;
+    bool ColNBelongsHere(int ColN) const;
+    bool NsBelongHere(int LineN, int ColN) const;
     //
     std::vector<T> GetExtRowN_AsArray(int rowN) const;
-    T*GetExtRowN_AsPtr(int ExtRowN) const;
+    // T*GetExtRowN_AsPtr(int ExtRowN) const;
     std::vector<T> GetIneRowN_AsArray(int rowN) const;
     std::vector<T> GetContent_AsArray1D() const;
     std::vector<std::vector<T>> GetContent_AsArray2D() const;
+    //
+    //
+    virtual T GetComponent_AsVal(int LineN, int ColN) const=0;
+    virtual T* GetComponent_AsPtr(int LineN, int ColN) const=0;
+    //
+    virtual void SetComponent(const T& val, int LineN, int ColN)=0;
+    //
+    virtual void AddToExtRowN(int RowN, const T&val)=0;
+    virtual void InsToExtRowN(int RowN, int PosN, const T&val)=0;
+    virtual void DelFromExtRowN(int RowN, int PosN)=0;
+    //
+    virtual void SetExtRowN(int N, T*rowParam, int Q, int whatN1=1, int QDfltValsBefore=0, bool DefaulsAreZerosNotOwnVals=true)=0;
+    virtual void SetExtRowN(int N, std::vector<T>rowParam, int whatN1=1, int QDfltValsBefore=0, bool DefaulsAreZerosNotOwnVals=true)=0;
+    virtual void SetExtRowN(int N, T*rowParam, int Q, const T& defaultVal, int whatN1=1, int QDfltValsBefore=0, bool DefaulsAreZerosNotOwnVals=true)=0;
+    //
+    virtual void SetIneRowN(int N, T*rowParam, int Q, int whatN1=1, int QDfltValsBefore=0, bool DefaulsAreOwnValsNotZeros=true)=0;
+    virtual void SetIneRowN(int N, std::vector<T>rowParam, int whatN1=1, int QDfltValsBefore=0, bool DefaulsAreOwnValsNotZeros=true)=0;
+    //
+    virtual void AddExtRowN(T*rowParam, int Q, int whatN1=1, int QDfltValsBefore=0)=0;
+    virtual void AddExtRowN(std::vector<T>rowParam, int whatN1=1, int QDfltValsBefore=0)=0;
+    //
+    virtual void AddIneRowN(T*rowParam, int Q, int whatN1=1, int QDfltValsBefore=0)=0;
+    virtual void AddIneRowN(std::vector<T>rowParam, int whatN1=1, int QDfltValsBefore=0)=0;
+    //
+    virtual void InsExtRowN(int N, T*rowParam, int Q, int whatN1=1, int QDfltValsBefore=0)=0;
+    virtual void InsExtRowN(int N, std::vector<T>rowParam, int whatN1=1, int QDfltValsBefore=0)=0;
+    //
+    virtual void InsIneRowN(int N, T*rowParam, int Q, int whatN1=1, int QDfltValsBefore=0)=0;
+    virtual void InsIneRowN(int N, std::vector<T>rowParam, int whatN1=1, int QDfltValsBefore=0)=0;
+    //
+    virtual void DelExtRowN(int N=-1)=0;
+    virtual void DelIneRowN(int N=-1)=0;
+    //
+    virtual void Set(T**y, const Array2DSize& size, bool WriteSize=true);
+    virtual void Set(T**y, std::vector<int>ExtRowsLengthes, bool RectIfPossible=true, bool WriteSize=true);
+    virtual void Set(T**y, int QExtRows, int*ExtRowsLengthes, bool RectIfPossible=true, bool WriteSize=true);
+    virtual void Set(T**y, int QExtRows, int ExtRowsLength=1, bool WriteSize=true);
+    virtual void Set(T*y, const Array2DSize& size, bool WriteSize=true);
+    virtual void Set(T*y, std::vector<int>ExtRowsLengthes, bool WriteSize=true);
+    virtual void Set(T*y, int QExtRows, int*ExtRowsLengthe, bool WriteSize=true);
+    virtual void Set(T*y, int QExtRows, int ExtRowsLength=1, bool sizeVaria=false, bool WriteSize=true);
+    virtual void Set(std::vector<std::vector<T>>y, bool RectIfPossible=true, bool WriteSize=true);
+    virtual void Set(std::vector<T>y, const Array2DSize& size, bool WriteSize=true);
+    virtual void Set(std::vector<T>y, std::vector<int>ExtRowsLengthes, bool RectIfPossible=true, bool WriteSize=true);
+    virtual void Set(std::vector<T>y, int QExtRows, int*ExtRowsLengthes, bool RectIfPossible=true, bool WriteSize=true);
+    virtual void Set(std::vector<T>y, int QExtRows, int ExtRowsLength=1, bool sizeVaria=false, bool WriteSize=true);
+    virtual void Set(const T&val, const Array2DSize& size, bool WriteSize=true);
+    virtual void Set(const T&val, std::vector<int>ExtRowsLengthes, bool RectIfPossible=true, bool WriteSize=true);
+    virtual void Set(const T&val, int QExtRows, int*ExtRowsLengthes, bool RectIfPossible=true, bool WriteSize=true);
+    virtual void Set(const T&val, int QExtRows, int ExtRowsLength=1, bool WriteSize=true);
     //
     void SwapVals(int ExtRowN1, int IneRowN1, int ExtRowN2, int IneRowN2);
     //
@@ -10344,7 +10946,6 @@ template <class T>class Array2D_Prototype{
 };
 
 //template <class T>class Array2D_P2S
-//template <class T>class Array2D_P2L
 //template <class T>class Array2D_V2S
 //template <class T>class Array2D_V2L
 //template <class T>class Array2D_P1S

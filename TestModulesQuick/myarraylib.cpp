@@ -133,7 +133,171 @@ std::vector<int>NumbersSubRow(std::vector<int> x, int LreqGiven, int FromN, int 
 
 
 
+Array2DSize Array2DSize_ConcatAdding(const Array2DSize& size1, const Array2DSize& size2, int&ERN1, int&IRN1, int&ERN2, int&IRN2, int shift, int Q, int FromN, int QDfltValsBefore, bool SetRect){
+    int Q1=size1.GerQExtRows(), Q2=size2.GerQExtRows(), Q3, lmax1=size1.GetMaxLength(), lmax2=size2.GetMaxLength(), lmax3;
+    Array2DSize size3;
+    int LreqCalcd=0, preN1_=0, preN2_=0, ownN1_=0, ownN2=0, ForOwnN1_=0, ForOwnN2=0, postN1=0, postN2_=0, Lold=Q2;
+    if(Q==0){
+        Q=Q2-FromN+1+QDfltValsBefore;
+    }
+    Q3=Q1+Q;
+    if(FromN<0){
+        FromN+=(Q2+1);
+    }
+    Calc_Array1DSubArray_byLs_MarkupNs_vFmls(LreqCalcd, preN1_, preN2_, ownN1_, ownN2, ForOwnN1_, ForOwnN2, postN1, postN2_, Lold, Q, FromN, QDefaultBefore);
+    if(shift>=0){
+        //Q3 = Q1>shift+Q ? Q1 : shift+Q;
+        //Calc_Array1DSubArray_byLs_MarkupNs_vFmls(LreqCalcd, preN1_, preN2_, ownN1_, ownN2, ForOwnN1_, ForOwnN2, postN1, postN2_, Lold, LreqGiven, FromN, QDefaultBefore);
+        //Calc_Array1DSubArray_byLs_MarkupNs_vFmls(LreqCalcd, preN1_, preN2_, ownN1_, ownN2, ForOwnN1_, ForOwnN2, postN1, postN2_, Lold, Q, FromN, QDefaultBefore);
+        ERN1=1;
+        IRN1=1;
+        if(ForOwnN2_>0){
+            ERN2=Q1+ForOwnN1_;
+            IRN2=shift+1;
+        }else{
+             ERN2=0;
+             IRN2=0;
+        }
+        lmax3 = lmax1 >= shift + lmax2 ? lmax1 : shift + lmax2;
+        size3.SetNull();
+        if(SetResict){
+            size3.Set(Q3, lmax3);
+        }else{
+            for(int i=1; i<=Q1; i++){
+                size3.AddExt(size1.GetLength(i));
+            }
+            if(preN2_>0){
+                for(int i=ownN1_; i<=ownN2; i++){
+                    size3.AddExt(lmax3);
+                }
+            }
+            if(ERN2>0){
+               for(int i=ownN1_; i<=ownN2; i++){
+                   size3.AddExt(shift+size2.GetLength(i));
+                }
+            }
+            if(postN2_>0){
+                for(int i=postN1; i<=postN2_; i++){
+                    size3.AddExt(lmax3);
+                }
+            }
+        }
+    }else{
+        //Q3 = -shift+Q1 > Q ? -shift+Q1 : Q;
+        //Calc_Array1DSubArray_byLs_MarkupNs_vFmls(LreqCalcd, preN1_, preN2_, ownN1_, ownN2, ForOwnN1_, ForOwnN2, postN1, postN2_, Lold, Q, FromN, QDefaultBefore);
+        ERN1=1;
+        IRN1=-shift+1;
+        if(ForOwnN2_>0){
+            ERN2=Q1+ForOwnN1_;
+            IRN2=1;
+        }else{
+             ERN2=0;
+             IRN2=0;
+        }
+        lmax3 = -shift + lmax1 >= lmax2 ? -shift + lmax1 : lmax2;
+        size3.SetNull();
+        if(SetResict){
+            size3.Set(Q3, lmax3);
+        }else{
+            for(int i=1; i<=Q1; i++){
+                size3.AddExt(-shift+size1.GetLength(i));
+            }
+            if(preN2_>0){
+                for(int i=ownN1_; i<=ownN2; i++){
+                    size3.AddExt(lmax3);
+                }
+            }
+            if(ERN2>0){
+               for(int i=ownN1_; i<=ownN2; i++){
+                   size3.AddExt(size2.GetLength(i));
+                }
+            }
+            if(postN2_>0){
+                for(int i=postN1; i<=postN2_; i++){
+                    size3.AddExt(lmax3);
+                }
+            }
+        }
+    }
+    return size3;
+}
 
+
+Array2DSize Array2DSize_ConcatStretching(const Array2DSize& size1, const Array2DSize& size2, int&ERN1, int&EIN1, int&ERN2, int&EIN2, int shift, int Q, int FromN, int QDfltValsBefore, bool Stretch1ToMax_Not_AddToLast, bool AppendToRect){
+    int Q1=size1.GerQExtRows(), Q2=size2.GerQExtRows(), Q3, lmax1=size1.GetMaxLength(), lmax2=size2.GetMaxLength(), lmax3;
+    Array2DSize size3;
+    int LreqCalcd=0, preN1_=0, preN2_=0, ownN1_=0, ownN2=0, ForOwnN1_=0, ForOwnN2=0, postN1=0, postN2_=0, Lold=Q2;
+    size3.SetNull();
+    //if(Stretch1ToMax_Not_AddToLast){
+    //
+    //}else{
+    //
+    //}
+    Calc_Array1DSubArray_byLs_MarkupNs_vFmls(LreqCalcd, preN1_, preN2_, ownN1_, ownN2, ForOwnN1_, ForOwnN2, postN1, postN2_, Lold, Q, FromN, QDefaultBefore);
+    if(shift>=0){
+        Q3 = Q1>shift+Q ? Q1 : shift+Q;
+        if(Stretch1ToMax_Not_AddToLast){
+            if(AppendToRect){
+                lmax3 = lmax1 + lmax2;
+                size3.Set(Q3, lmax3);
+            }else{
+                if(shift>Q1){
+                    for(int i=1; i<=Q1; i++){
+                        size3.AddExt(size1.SetLength(i););
+                    }
+                    for(int i=Q1+1; i<=shift; i++){
+                        size3.AddExt(lmax1 + lmax2);
+                    }
+                    if(Stretch1ToMax_Not_AddToLast){
+                        if(preN2_>0){
+                            for(int i=preN1_; i<=preN2_; i++){
+                                size3.AddExt(lmax1 + lmax2);
+                            }
+                        }
+                        if(ownN2>0){
+                            for(int i=ownN1_; i<=ownN2; i++){
+                                size3.AddExt(size2.GetLength(i));
+                            }
+                        }
+                        if(postN2_>0){
+                            for(int i=postN1; i<=postN2_; i++){
+                                size3.AddExt(lmax1 + lmax2);
+                            }
+                        }
+                    }else{
+                        for(int i=1; i<=shift; i++){
+
+                        }
+                    }
+                }else{
+
+                }
+            }
+        }else{
+            if(AppendToRect){
+
+            }else{
+
+            }
+        }
+    }else{
+        Q3 = -shift+Q1 > Q ? -shift+Q1 : Q;
+        if(Stretch1ToMax_Not_AddToLast){
+            if(AppendToRect){
+
+            }else{
+
+            }
+        }else{
+            if(AppendToRect){
+
+            }else{
+
+            }
+        }
+    }
+    return size3;
+}
 
 
 
